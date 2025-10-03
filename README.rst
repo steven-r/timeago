@@ -79,7 +79,10 @@ Three parameters of method ``format``:
    of ``datetime`` / ``timedelta`` or datetime formatted string.
 -  ``now``: reference time, must be instance of ``datetime`` or
    datetime formatted string.
--  ``locale``: the locale code, default ``en``.
+-  ``locale``: the locale code, default `en`. If given with a string, the local will be loaded according to the locale code. If a list is provided, this will
+    replace any given locale with the provided locale (to allow changes). If a callable is provided it will be used as a generator function (see the PL locale for details).
+    The semantics of the list/callable need to be the same as if a regular locale is loaded.
+    The default locale used is `en`.
 
 Locale
 ------

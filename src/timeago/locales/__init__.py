@@ -19,15 +19,22 @@ def locale_module(mod, locale):
 
 def timeago_template(locale, index, ago_in):
     '''
-    simple locale implement
+    simple locale implement.
+    If locale is a list, use the list directly.
+    If locale is a callable, call it directly.
     '''
-    try:
-        LOCALE = __import__('timeago.locales.' + locale)
-        LOCALE = locale_module(LOCALE, locale)
-    except:
-        locale = setting.DEFAULT_LOCALE
-        LOCALE = __import__('timeago.locales.' + locale)
-        LOCALE = locale_module(LOCALE, locale)
+    if isinstance(locale, list):
+        LOCALE = locale
+    elif callable(locale):
+        LOCALE = locale
+    else:
+        try:
+            LOCALE = __import__('timeago.locales.' + locale)
+            LOCALE = locale_module(LOCALE, locale)
+        except:  # noqa: E722
+            locale = setting.DEFAULT_LOCALE
+            LOCALE = __import__('timeago.locales.' + locale)
+            LOCALE = locale_module(LOCALE, locale)
 
     if isinstance(LOCALE, list):
         return LOCALE[index][ago_in]

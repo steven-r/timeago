@@ -2602,6 +2602,256 @@ class TestCase(unittest.TestCase):
 
 
 
+    def test_timeago_list_de(self):
+        locale = [
+            ["gerade eben", "gleich"],
+            ["vor %s Sekunden", "in %s Sekunden"],
+            ["vor einer Minute", "in einer Minute"],
+            ["vor %s Minuten", "in %s Minuten"],
+            ["vor einer Stunde", "in einer Stunde"],
+            ["vor %s Stunden", "in %s Stunden"],
+            ["vor einem Tag", "in einem Tag"],
+            ["vor %s Tagen", "in %s Tagen"],
+            ["vor einer Woche", "in einer Woche"],
+            ["vor %s Wochen", "in %s Wochen"],
+            ["vor einem Monat", "in einem Monat"],
+            ["vor %s Monaten", "in %s Monaten"],
+            ["vor einem Jahr", "in einem Jahr"],
+            ["vor %s Jahren", "in %s Jahren"],
+        ]
+
+        date = datetime.datetime.now()
+        now = date + datetime.timedelta(seconds=2)
+        self.assertEqual(timeago.format(date, now, locale), u'gerade eben')
+
+        now = date + datetime.timedelta(seconds=10)
+        self.assertEqual(timeago.format(date, now, locale), u'vor 10 Sekunden')
+
+        now = date + datetime.timedelta(seconds=60)
+        self.assertEqual(timeago.format(date, now, locale), u'vor einer Minute')
+
+        now = date + datetime.timedelta(seconds=60 * 3.4)
+        self.assertEqual(timeago.format(date, now, locale), u'vor 3 Minuten')
+
+        now = date + datetime.timedelta(seconds=3600)
+        self.assertEqual(timeago.format(date, now, locale), u'vor einer Stunde')
+
+        now = date + datetime.timedelta(seconds=3600 * 2)
+        self.assertEqual(timeago.format(date, now, locale), u'vor 2 Stunden')
+
+        now = date + datetime.timedelta(seconds=86400)
+        self.assertEqual(timeago.format(date, now, locale), u'vor einem Tag')
+
+        now = date + datetime.timedelta(seconds=86400 * 4.5)
+        self.assertEqual(timeago.format(date, now, locale), u'vor 4 Tagen')
+
+        now = date + datetime.timedelta(seconds=86400 * 7)
+        self.assertEqual(timeago.format(date, now, locale), u'vor einer Woche')
+
+        now = date + datetime.timedelta(seconds=2592000)
+        self.assertEqual(timeago.format(date, now, locale), u'vor 4 Wochen')
+
+        now = date + datetime.timedelta(seconds=86400 * 31)
+        self.assertEqual(timeago.format(date, now, locale), u'vor einem Monat')
+
+        now = date + datetime.timedelta(seconds=2592000 * 3.5)
+        self.assertEqual(timeago.format(date, now, locale), u'vor 3 Monaten')
+
+        now = date + datetime.timedelta(seconds=31536000)
+        self.assertEqual(timeago.format(date, now, locale), u'vor einem Jahr')
+
+        now = date + datetime.timedelta(seconds=31536000 * 2.1)
+        self.assertEqual(timeago.format(date, now, locale), u'vor 2 Jahren')
+
+
+    def test_timeago_generator_pl(self):
+        base = [
+            ["właśnie teraz", "za chwilę"],
+            ["%s sekund temu", "za %s sekund", "%s sekundy temu", "za %s sekundy"],
+            ["minutę temu", "za minutę"],
+            ["%s minut temu", "za %s minut", "%s minuty temu", "za %s minuty"],
+            ["godzinę temu", "za godzinę"],
+            ["%s godzin temu", "za %s godzin", "%s godziny temu", "za %s godziny"],
+            ["1 dzień temu", "za 1 dzień"],
+            ["%s dni temu", "za %s dni", "%s dni temu", "za %s dni"],
+            ["tydzień temu", "za tydzień"],
+            ["%s tygodni temu", "za %s tygodni", "%s tygodnie temu", "za %s tygodnie"],
+            ["miesiąc temu", "za miesiąc"],
+            ["%s miesięcy temu", "za %s miesięcy", "%s miesiące temu", "za %s miesiące"],
+            ["rok temu", "za rok"],
+            ["%s lat temu", "za %s lat", "%s lata temu", "za %s lata"]
+        ]
+
+
+        def generate(row, y):
+            def formatting(time):
+                '''
+                Uses the 3rd and 4th field of the list in every 2 entries -
+                the ones containing %s, if the diff ends with 2, 3 or 4 but
+                not with 12, 13 or 14.
+                '''
+                if row % 2 == 0:
+                    return base[row][y]
+                last_number = time % 10
+                last_two_numbers = time % 100
+                if last_number in range(2, 5) and last_two_numbers not in range(12, 15):
+                    return base[row][y + 2]
+                return base[row][y]
+
+            return formatting
+
+        date = datetime.datetime.now()
+        now = date + datetime.timedelta(seconds=2)
+        self.assertEqual(timeago.format(date, now, generate), 'właśnie teraz')
+
+        now = date - datetime.timedelta(seconds=2)
+        self.assertEqual(timeago.format(date, now, generate), 'za chwilę')
+
+        now = date - datetime.timedelta(seconds=10)
+        self.assertEqual(timeago.format(date, now, generate), 'za 10 sekund')
+
+        now = date + datetime.timedelta(seconds=10)
+        self.assertEqual(timeago.format(date, now, generate), '10 sekund temu')
+
+        now = date + datetime.timedelta(seconds=12)
+        self.assertEqual(timeago.format(date, now, generate), '12 sekund temu')
+
+        now = date + datetime.timedelta(seconds=33)
+        self.assertEqual(timeago.format(date, now, generate), '33 sekundy temu')
+
+        now = date + datetime.timedelta(seconds=52)
+        self.assertEqual(timeago.format(date, now, generate), '52 sekundy temu')
+
+        now = date - datetime.timedelta(seconds=60)
+        self.assertEqual(timeago.format(date, now, generate), 'za minutę')
+
+        now = date + datetime.timedelta(seconds=60)
+        self.assertEqual(timeago.format(date, now, generate), 'minutę temu')
+
+        now = date - datetime.timedelta(seconds=60 * 3.4)
+        self.assertEqual(timeago.format(date, now, generate), 'za 3 minuty')
+
+        now = date + datetime.timedelta(seconds=60 * 3.4)
+        self.assertEqual(timeago.format(date, now, generate), '3 minuty temu')
+
+        now = date - datetime.timedelta(seconds=60 * 5.1)
+        self.assertEqual(timeago.format(date, now, generate), 'za 5 minut')
+
+        now = date + datetime.timedelta(seconds=60 * 5.1)
+        self.assertEqual(timeago.format(date, now, generate), '5 minut temu')
+
+        now = date - datetime.timedelta(minutes=11)
+        self.assertEqual(timeago.format(date, now, generate), 'za 11 minut')
+
+        now = date + datetime.timedelta(minutes=11)
+        self.assertEqual(timeago.format(date, now, generate), '11 minut temu')
+
+        now = date - datetime.timedelta(minutes=12)
+        self.assertEqual(timeago.format(date, now, generate), 'za 12 minut')
+
+        now = date + datetime.timedelta(minutes=12)
+        self.assertEqual(timeago.format(date, now, generate), '12 minut temu')
+
+        now = date - datetime.timedelta(seconds=3600)
+        self.assertEqual(timeago.format(date, now, generate), 'za godzinę')
+
+        now = date + datetime.timedelta(seconds=3600)
+        self.assertEqual(timeago.format(date, now, generate), 'godzinę temu')
+
+        now = date - datetime.timedelta(seconds=3600 * 2)
+        self.assertEqual(timeago.format(date, now, generate), 'za 2 godziny')
+
+        now = date + datetime.timedelta(seconds=3600 * 2)
+        self.assertEqual(timeago.format(date, now, generate), '2 godziny temu')
+
+        now = date - datetime.timedelta(hours=5)
+        self.assertEqual(timeago.format(date, now, generate), 'za 5 godzin')
+
+        now = date + datetime.timedelta(hours=5)
+        self.assertEqual(timeago.format(date, now, generate), '5 godzin temu')
+
+        now = date + datetime.timedelta(hours=13)
+        self.assertEqual(timeago.format(date, now, generate), '13 godzin temu')
+
+        now = date + datetime.timedelta(hours=23)
+        self.assertEqual(timeago.format(date, now, generate), '23 godziny temu')
+
+        now = date - datetime.timedelta(seconds=86400)
+        self.assertEqual(timeago.format(date, now, generate), 'za 1 dzień')
+
+        now = date + datetime.timedelta(seconds=86400)
+        self.assertEqual(timeago.format(date, now, generate), '1 dzień temu')
+
+        now = date - datetime.timedelta(seconds=86400 * 4.5)
+        self.assertEqual(timeago.format(date, now, generate), 'za 4 dni')
+
+        now = date + datetime.timedelta(seconds=86400 * 4.5)
+        self.assertEqual(timeago.format(date, now, generate), '4 dni temu')
+
+        now = date - datetime.timedelta(weeks=1)
+        self.assertEqual(timeago.format(date, now, generate), 'za tydzień')
+
+        now = date + datetime.timedelta(weeks=1)
+        self.assertEqual(timeago.format(date, now, generate), 'tydzień temu')
+
+        now = date - datetime.timedelta(seconds=2592000)
+        self.assertEqual(timeago.format(date, now, generate), 'za 4 tygodnie')
+
+        now = date + datetime.timedelta(seconds=2592000)
+        self.assertEqual(timeago.format(date, now, generate), '4 tygodnie temu')
+
+        now = date - datetime.timedelta(seconds=2592000 * 3.5)
+        self.assertEqual(timeago.format(date, now, generate), 'za 3 miesiące')
+
+        now = date + datetime.timedelta(seconds=2592000 * 3.5)
+        self.assertEqual(timeago.format(date, now, generate), '3 miesiące temu')
+
+        now = date - datetime.timedelta(seconds=2592000 * 5.5)
+        self.assertEqual(timeago.format(date, now, generate), 'za 5 miesięcy')
+
+        now = date + datetime.timedelta(seconds=2592000 * 5.5)
+        self.assertEqual(timeago.format(date, now, generate), '5 miesięcy temu')
+
+        now = date - datetime.timedelta(seconds=31536000)
+        self.assertEqual(timeago.format(date, now, generate), 'za rok')
+
+        now = date + datetime.timedelta(seconds=31536000 * 1.1)
+        self.assertEqual(timeago.format(date, now, generate), 'rok temu')
+
+        now = date - datetime.timedelta(seconds=31536000 * 2.1)
+        self.assertEqual(timeago.format(date, now, generate), 'za 2 lata')
+
+        now = date + datetime.timedelta(seconds=31536000 * 2.1)
+        self.assertEqual(timeago.format(date, now, generate), '2 lata temu')
+
+        now = date - datetime.timedelta(weeks=4.35 * 12 * 5.5)
+        self.assertEqual(timeago.format(date, now, generate), 'za 5 lat')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 5.5)
+        self.assertEqual(timeago.format(date, now, generate), '5 lat temu')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 22.5)
+        self.assertEqual(timeago.format(date, now, generate), '22 lata temu')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 25.5)
+        self.assertEqual(timeago.format(date, now, generate), '25 lat temu')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 101)
+        self.assertEqual(timeago.format(date, now, generate), '101 lat temu')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 102)
+        self.assertEqual(timeago.format(date, now, generate), '102 lata temu')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 112)
+        self.assertEqual(timeago.format(date, now, generate), '112 lat temu')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 122)
+        self.assertEqual(timeago.format(date, now, generate), '122 lata temu')
+
+        now = date + datetime.timedelta(weeks=4.35 * 12 * 125)
+        self.assertEqual(timeago.format(date, now, generate), '125 lat temu')
+
+
 
 
 if __name__ == '__main__':
